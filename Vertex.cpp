@@ -1,10 +1,12 @@
 #include "Vertex.h"
 
 
+Vertex::Vertex() {}
 
-Vertex::Vertex(const char * name)
+Vertex::Vertex(const char * name, int num)
 {
 	this->id = name;
+	this->num = num;
 }
 
 vector<Vertex*> Vertex::getAdj() {

@@ -6,15 +6,17 @@
 
 using namespace std;
 
-ProyectMethods::ProyectMethods() {}
+ProyectMethods::ProyectMethods() {
+	cantV = 0;
+}	
 
 void ProyectMethods::Create_Airport(const char*name, double lat, double lon) {
 	ofstream ArchivoAeropuertos("C:\\Users\\Usuario\\Desktop\\mapas\\Aeropuertos.txt",ios::app);
 
 	if (!ArchivoAeropuertos) { return; }
 	
-	Vertex * v = new Vertex(name);
-
+	Vertex * v = new Vertex(name, cantV);
+	cantV++;
 	vertexes.push_back(v);
 
 	ArchivoAeropuertos << name << ";" << lat << ";" << lon << "\n";
@@ -76,18 +78,27 @@ void ProyectMethods::Delete_Airport(const char *nom) {
 
 	}
 
-	for (size_t i = 0; i < vertexes.size(); i++) {	
-		if (vertexes[i]->id == nom) {
-			vertexes.erase(vertexes.begin()+i);
+	for (size_t i = 0; i < vertexes.size(); i++) {
+		for (size_t u = 0; u < vertexes[i]->edges.size(); u++) {
+			if (vertexes[i]->edges[u]->destiny->id == nom) {
+				vertexes[i]->edges.erase(vertexes[i]->edges.begin() + u);
+			}
 		}
 	}
+
+	for (size_t z = 0; z < vertexes.size(); z++) {
+		if (vertexes[z]->id == nom) {
+			vertexes.erase(vertexes.begin() + z);
+		}
+	}
+
 
 	fileA.close(); fileB.close();
 
 	remove("C:\\Users\\Usuario\\Desktop\\mapas\\Aeropuertos.txt");
 	rename("C:\\Users\\Usuario\\Desktop\\mapas\\AeropuertosTMP.txt", "C:\\Users\\Usuario\\Desktop\\mapas\\Aeropuertos.txt");
 
-
+	cantV--;
 }
 
 void ProyectMethods::Update_Airport(const char *name, const char *Newname, double lat, double lon) {
@@ -375,6 +386,95 @@ double ProyectMethods::getLng(const char * id) {
 		}
 	}
 	return lng;
+}
+
+void ProyectMethods::dijkstra(const char * id) {
+	ifstream fileA("C:\\Users\\Usuario\\Desktop\\mapas\\Aeropuertos.txt", ios::in);
+	if (!fileA) { 
+		return; 
+	}
+
+	string line, tmp;
+
+	while (fileA >> line) {
+		stringstream st(line);
+
+		getline(st, tmp, ';');
+
+		if (tmp == id) { 
+			for (size_t i = 0; i < vertexes.size(); i++) {
+				if (vertexes[i]->id == id) {
+					dijk(vertexes[i]);
+				}
+			}
+		}
+	}
+}
+
+void ProyectMethods::dijk(Vertex * origen) {
+	double * dist = new double[vertexes.size()];
+	Vertex ** parent = reinterpret_cast<Vertex**>(new Vertex[cantV]);
+	bool * visit = new bool[vertexes.size()];
+
+	for (int i = 0; i < cantV; i++) {
+		dist[i] = INT_MAX;
+		parent[i] = NULL;
+		visit[i] = false;
+	}
+
+	dist[origen->num] = 0;
+	queue<Edge*>priorityQ = sortedEdges(origen);
+
+	while (!priorityQ.empty()) {
+		Vertex * n = priorityQ.front()->destiny;
+		double d = priorityQ.front()->dist;
+		priorityQ.pop();
+		visit[n->num] = true;
+		dist[n->num] = d;
+
+		vector<Vertex *>nAdj = n->getAdj();
+
+		for (size_t i = 0; i < nAdj.size(); i++) {
+			double w = dist[n->num] + weight(n, nAdj[i]);
+			if (w < dist[nAdj[i]->num]) {
+				dist[nAdj[i]->num] = w;
+				parent[nAdj[i]->num] = n;
+			}
+		}
+	}
+
+	for (size_t i = 0; i < vertexes.size(); i++) {
+		Edge * e = new Edge(dist[i]);
+		e->origin = origen;
+		e->destiny = vertexes[i];
+	}
+}
+
+queue<Edge *> ProyectMethods::sortedEdges(Vertex *vertex) {
+	vector<Edge *> edges = vertex->edges;
+	Edge *temp = NULL;
+	for (int i = 0; i < edges.size(); i++) {
+		for (int j = 1; j < (edges.size() - i); j++) {
+			if (edges[j - 1]->dist > edges[j - 1]->dist) {
+				temp = edges[j - 1];
+				edges[j - 1] = edges[j];
+				edges[j] = temp;
+			}
+		}
+	}
+	queue<Edge *> priorityQueue;
+	for (int i = 0; i < edges.size(); i++) {
+		priorityQueue.push(edges[i]);
+	}
+	return priorityQueue;
+}
+
+double ProyectMethods::weight(Vertex *origin, Vertex *destiny) {
+	for (int i = 0; i < origin->edges.size(); i++) {
+		if (origin->edges[i]->destiny == destiny) {
+			return origin->edges[i]->dist;
+		}
+	}
 }
 
 //int  ProyectMethods::Display_Airports() {

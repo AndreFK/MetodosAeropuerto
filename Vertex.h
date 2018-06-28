@@ -11,10 +11,12 @@ using namespace std;
 
 class Vertex
 {
-public:
+public:	
+	int num;
 	vector<Edge*> edges;
 	const char * id;
-	Vertex(const char *);
+	Vertex();
+	Vertex(const char *, int);
 	vector<Vertex*> getAdj();//obtiene las aristas conectadas a este vertice
 	~Vertex();
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <queue>
 #include <iostream>
 #include "Vertex.h"
 #include "Edge.h"
@@ -8,8 +9,9 @@
 
 
 class ProyectMethods {
+private:
+	int cantV;
 public:
-
 	std::vector<Vertex*> vertexes;
 
 	ProyectMethods();
@@ -28,4 +30,10 @@ public:
 	int Lenght_R();
 	void Delete_Route(const char *,const char*);
 	void Update_Route(const char*, const char *, const char *, double);
+
+	void dijkstra(const char*);
+	void dijk(Vertex * origen);
+
+	double weight(Vertex *, Vertex *);
+	queue<Edge *> sortedEdges(Vertex*);
 };
